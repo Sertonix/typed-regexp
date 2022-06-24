@@ -1,0 +1,23 @@
+{
+    "name": "typed-regexp",
+    "version": "1.0.0",
+    "description": "Adds type checks for regular expressions.",
+    "main": "build/index.js",
+    "types": "build/index.d.ts",
+    "scripts": {
+        "build": "rimraf ./build && tsc"
+    },
+    "keywords": [
+        "regex",
+        "regexp",
+        "typesafe",
+        "type-safe",
+        "typescript"
+    ],
+    "author": "Sertonix",
+    "license": "MIT",
+    "devDependencies": {
+        "rimraf": "^3.0.2",
+        "typescript": "^4.7.4"
+    }
+}
