@@ -107,9 +107,6 @@ interface IntersectedArray<T,S> extends Array<T> {
     [n: number]: never; // elements are defined by the intersected array
 }
 
-/** create object with a set value type */
-type ObjectWith<T> = { [key: string]: T };
-
 /** toggle if a substring is in a string */
 type IfIn<String extends string,SubString extends string,True,False=never> = String extends `${string}${SubString}${string}` ? True : False;
 
