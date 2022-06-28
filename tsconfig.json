@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "rootDir": "scr",
+        "rootDir": "src",
         "outDir": "build",
         "target": "ES2020",
         "declaration": true,
