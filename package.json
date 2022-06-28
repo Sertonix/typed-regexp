@@ -1,6 +1,6 @@
 {
     "name": "typed-regexp",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Adds type checks for regular expressions.",
     "main": "build/index.js",
     "types": "build/index.d.ts",
