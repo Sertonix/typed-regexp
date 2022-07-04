@@ -1,10 +1,18 @@
-export type TypedRegExpMatchArray<Groups extends string[] = string[], NamedGroups extends { [key: string]: string } = { [key: string]: string }, InputString extends string = string> = {
+export type TypedRegExpMatchArray<
+    Groups extends string[] = string[],
+    NamedGroups extends { [key: string]: string } = { [key: string]: string },
+    InputString extends string = string
+> = {
     index?: number;
     input?: InputString;
     groups: OneNotOptional<NamedGroups>;
 } & ( [string,...Groups] & IntersectedArray<string,TypedRegExpMatchArray<Groups,NamedGroups,InputString>> );
 
-export type TypedRegExpExecArray<Groups extends string[] = string[], NamedGroups extends { [key: string]: string } = { [key: string]: string }, InputString extends string = string> = TypedRegExpMatchArray<Groups,NamedGroups,InputString> & {
+export type TypedRegExpExecArray<
+    Groups extends string[] = string[],
+    NamedGroups extends { [key: string]: string } = { [key: string]: string },
+    InputString extends string = string
+> = TypedRegExpMatchArray<Groups,NamedGroups,InputString> & {
     index: number;
     input: InputString;
 };
