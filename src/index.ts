@@ -95,7 +95,7 @@ type NonOptionalKeys<T> = { [k in keyof T]-?: undefined extends T[k] ? never : k
 type OptionalKeys<T> = { [k in keyof T]-?: undefined extends T[k] ? k : never }[keyof T];
 
 /** if condition in types */
-type If<I,T,F> = I extends true ? T : T extends false ? F : T|F;
+type If<I extends boolean,T,F> = I extends true ? T : T extends false ? F : T|F;
 
 /** returns true if flag is in the flag combo */
 type HasFlag<FlagCombo extends RegExpFlagCombos,Flag extends RegExpFlags> = IfIn<FlagCombo,Flag,true,false>;
