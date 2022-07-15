@@ -58,17 +58,41 @@ type ParseGroup_<R extends string> =
 /** parse parts with modifiers ? * + and there non-greedy versions */
 type ParsePart<R extends string> =
     ParsePart_<R> extends { g: infer G extends GroupsArray, ng: infer NG extends NamedGroups, r: infer R extends string } ?
-        R extends `?${"?"|""}${infer R extends string}` ? { g: G, ng: NG, r: R } | { g: ArrayWithLength<undefined,G["length"]>, ng: {[k in keyof NG]:undefined}, r: R } : // BUG causes recursion error
-        R extends `+${"?"|""}${infer R extends string}` ? { g: G, ng: NG, r: R } :
-        R extends `*${"?"|""}${infer R extends string}` ? { g: G, ng: NG, r: R } | { g: ArrayWithLength<undefined,G["length"]>, ng: {[k in keyof NG]:undefined}, r: R } : // BUG causes recursion error
-        // R extends `{${infer R extends string}` ? {g:G,r:R} :
+        R extends `?${infer R extends string}` ?
+            { g: G, ng: NG, r: ChopGreedy<R> } | { g: ArrayWithLength<undefined,G["length"]>, ng: {[k in keyof NG]:undefined}, r: ChopGreedy<R> } :
+        R extends `+${infer R extends string}` ? { g: G, ng: NG, r: ChopGreedy<R> } :
+        R extends `*${infer R extends string}` ? { g: G, ng: NG, r: ChopGreedy<R> } | { g: ArrayWithLength<undefined,G["length"]>, ng: {[k in keyof NG]:undefined}, r: ChopGreedy<R> } :
+        R extends `{${infer R extends string}` ?
+            ParseQuantifier<R> extends [infer R extends string,infer RepeatZero extends boolean] ?
+                RepeatZero extends false ? { g: G, ng: NG, r: ChopGreedy<R> } : // FIXME "RepeatZero extends false" should be covered by the next line
+                If<RepeatZero,{ g: ArrayWithLength<undefined,G["length"]>, ng: {[k in keyof NG]:undefined}, r: ChopGreedy<R> },{ g: G, ng: NG, r: ChopGreedy<R> }> :
+            undefined :
         { g: G, ng: NG, r: R } :
+    undefined;
+
+type ChopGreedy<R extends string> = R extends `?${infer R extends string}` ? R : R;
+
+type ParseQuantifier<R extends string> =
+    R extends `${infer Digit extends Digits}${infer R extends string}` ?
+        ParseQuantifier_<R,Equals<Digit,"0">> :
+    undefined;
+
+type ParseQuantifier_<R extends string, RepeatZero extends boolean> =
+    R extends `${infer Digit extends Digits}${infer R extends string}` ? ParseQuantifier_<R,And<RepeatZero,Equals<Digit,"0">>> :
+    R extends `,${infer R extends string}` ? ParseQuantifierMax<R,RepeatZero> :
+    R extends `}${infer R extends string}` ? [R,RepeatZero] :
+    undefined;
+
+type ParseQuantifierMax<R extends string, RepeatZero extends boolean, ToInfinity extends boolean = true> =
+    R extends `${infer Digit extends Digits}${infer R extends string}` ? ParseQuantifierMax< R, And< RepeatZero, If< Equals< Digit, "0" >, true, boolean > >, false > :
+    R extends `}${infer R extends string}` ? [ R, And< RepeatZero, If< ToInfinity, boolean, true > > ] :
     undefined;
 
 /* parse parts without modifiers */
 type ParsePart_<R extends string> =
     R extends `${infer _A extends NonSpecialRegExpChars|"."|"$"|"^"}${infer R extends string}` ? { g: [], ng: {}, r: R } :
-    R extends `(${infer R extends string}` ? ParseGroup<R> extends { g: infer G extends GroupsArray, ng: infer NG extends NamedGroups, r: infer R extends string } ? { g: G, ng: NG, r: R } : undefined :
+    R extends `(${infer R extends string}` ? ParseGroup<R> :
+    R extends `[${infer R extends string}` ? ParseCharacterClass<R> extends infer R extends string ? { g: [], ng: {}, r: R } : undefined :
     R extends `\\${infer R extends string}` ?
         R extends `u${infer _A extends HexDigits}${infer _B extends HexDigits}${infer R extends string}` ?
             R extends `${infer _A extends HexDigits}${infer _B extends HexDigits}${infer R extends string}` ? { g: [], ng: {}, r: R } :
@@ -88,26 +112,39 @@ type ParsePart_<R extends string> =
         undefined :
     undefined;
 
+type ParseCharacterClass<R extends string> =
+    R extends `]${infer R extends string}` ? R :
+    R extends `${infer _A extends NonSpecialRegExpChars|"."|"$"|"^"|"["}${infer R extends string}` ? ParseCharacterClass<R> :
+    R extends `\\${infer R extends string}` ?
+        R extends `u${infer _A extends HexDigits}${infer _B extends HexDigits}${infer R extends string}` ?
+            R extends `${infer _A extends HexDigits}${infer _B extends HexDigits}${infer R extends string}` ? ParseCharacterClass<R> :
+            undefined :
+        R extends `${infer _A extends SpecialRegExpChars}${infer R extends string}` ? ParseCharacterClass<R> :
+        R extends `${infer _A extends "n"|"r"|"t"|"s"|"S"|"d"|"D"|"w"|"W"|"v"|"b"}${infer R extends string}` ? ParseCharacterClass<R> :
+        R extends `c${infer _A extends Letters}${infer R extends string}` ? ParseCharacterClass<R> :
+        R extends `x${infer _A extends HexDigits}${infer _B extends HexDigits}${infer R extends string}` ? ParseCharacterClass<R> :
+        R extends `${infer _A extends Digits}${infer R extends string}` ? 
+            R extends `${infer _A extends Digits}${infer R extends string}` ? 
+                R extends `${infer _A extends Digits}${infer R extends string}` ? ParseCharacterClass<R> :
+                ParseCharacterClass<R> :
+            ParseCharacterClass<R> :
+        undefined :
+    undefined;
+
+
 /* TODO
-(?<name>...)
-(?=...)
-(?!...)
-(?<=...)
-(?<!...)
-[]
 a|b
-a{3} a{3,} a{3,6} a{3}? a{3,}? a{3,6}?
 
 \u{...}
 \p{...} \P{...}
  */
 
-// type test = ValidRegExp<"a(?<a>b)c">;
-type test = Parse<"(?<a>())?()">;
+type test = Parse<"(?<_>a){00,1}?">;
 /* recursion limit
-"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-"(((((((((((((((((((((((())))))))))))))))))))))))"
-"\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000"
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+(((((((((((((((((((((((((((((((())))))))))))))))))))))))))))))))
+((((((((((((((((((((((((((((((()?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?
+\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000
  */
 
 // https://dev.to/susisu/how-to-create-deep-recursive-types-5fgg
