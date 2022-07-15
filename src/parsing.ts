@@ -82,6 +82,9 @@ type ParsePart_<R extends string> =
                 R extends `${infer _A extends Digits}${infer R extends string}` ? { g: [], ng: {}, r: R } :
                 { g: [], ng: {}, r: R } :
             { g: [], ng: {}, r: R } :
+        R extends `k<${infer R extends string}` ?
+            ParseGroupName<R> extends { ng: infer _NG extends NamedGroups, r: infer R extends string } ? { g: [], ng: {}, r: R } :
+            undefined :
         undefined :
     undefined;
 
@@ -94,7 +97,6 @@ type ParsePart_<R extends string> =
 []
 a|b
 a{3} a{3,} a{3,6} a{3}? a{3,}? a{3,6}?
-\k<name>
 
 \u{...}
 \p{...} \P{...}
