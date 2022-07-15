@@ -13,8 +13,8 @@ type Digits = "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9";
 // important: this doesn't support non ascii characters
 // IDEA support string parts with:
 //  R extends `${infer C extends string}${infer R extends string}` ? string extends C ? {g:GroupsArray,n:NamedGroups,r:R} : undefined : undefined
-// TODO throw error on douplicated group name
 // IDEA use return value to pass usefull error information
+// TODO throw error on duplicated group name
 
 type GroupsArray = Array<string|undefined>;
 type NamedGroups = {[k:string]:string|undefined};
@@ -58,7 +58,7 @@ type ParseGroup_<R extends string> =
     ParsePart<R> extends { g: infer G extends GroupsArray, ng: infer NG extends NamedGroups, r: infer R extends string } ? ParseGroup_<R> extends { g: infer G2 extends GroupsArray, ng: infer NG2 extends NamedGroups, r: infer R extends string } ? { g: [...G,...G2], ng: NG & NG2, r: R } : undefined :
     undefined;
 
-/** parse parts with modifiers ? * + and there greedy versions */
+/** parse parts with modifiers ? * + and there non-greedy versions */
 type ParsePart<R extends string> =
     ParsePart_<R> extends { g: infer G extends GroupsArray, ng: infer NG extends NamedGroups, r: infer R extends string } ?
         R extends `?${"?"|""}${infer R extends string}` ? { g: G, ng: NG, r: R } | { g: ArrayWithLength<undefined,G["length"]>, ng: {[k in keyof NG]:undefined}, r: R } : // BUG causes recursion error
@@ -76,10 +76,10 @@ type ParsePart_<R extends string> =
         R extends `u${infer _A extends HexDigits}${infer _B extends HexDigits}${infer R extends string}` ?
             R extends `${infer _A extends HexDigits}${infer _B extends HexDigits}${infer R extends string}` ? { g: [], ng: {}, r: R } :
             undefined :
-        R extends `${infer _A extends SpecialRegExpChars}${infer R extends string}` ? { g:[], ng: {}, r: R } :
-        R extends `${infer _A extends "n"|"r"|"t"|"s"|"S"|"d"|"D"|"w"|"W"|"v"|"b"}${infer R extends string}` ? { g:[], ng: {}, r: R } :
+        R extends `${infer _A extends SpecialRegExpChars}${infer R extends string}` ? { g: [], ng: {}, r: R } :
+        R extends `${infer _A extends "n"|"r"|"t"|"s"|"S"|"d"|"D"|"w"|"W"|"v"|"b"}${infer R extends string}` ? { g: [], ng: {}, r: R } :
         R extends `c${infer _A extends Letters}${infer R extends string}` ? { g: [], ng: {}, r: R } :
-        R extends `x${infer _A extends HexDigits}${infer _B extends HexDigits}${infer R extends string}` ? { g:[], ng: {}, r: R } :
+        R extends `x${infer _A extends HexDigits}${infer _B extends HexDigits}${infer R extends string}` ? { g: [], ng: {}, r: R } :
         R extends `${infer _A extends Digits}${infer R extends string}` ? 
             R extends `${infer _A extends Digits}${infer R extends string}` ? 
                 R extends `${infer _A extends Digits}${infer R extends string}` ? { g: [], ng: {}, r: R } :
