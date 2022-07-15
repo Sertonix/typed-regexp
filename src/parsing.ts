@@ -114,7 +114,7 @@ type test = Parse<"(?<a>())?()">;
 // https://dev.to/susisu/how-to-create-deep-recursive-types-5fgg
 
 type OptionalGroupsArray<T extends GroupsArray> = T | ArrayWithLength<undefined,T["length"]>;
-type ArrayWithLength<T,L extends number, Array extends T[] = []> = [T,...Array]["length"] extends L ? [T,...Array] : ArrayWithLength<T,L,[T,...Array]>;
+type ArrayWithLength<T,L extends number, Array extends T[] = []> = Array["length"] extends L ? Array : ArrayWithLength<T,L,[T,...Array]>;
 type And<T extends boolean,U extends boolean> = T|U extends true ? true : T extends false ? false : U extends false ? false : boolean;
 type Not<T> = T extends true ? false : T extends false ? true : boolean;
 type XOr<T extends boolean,U extends boolean> = T extends true ? Not<U> : T extends false ? U : boolean;
