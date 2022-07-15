@@ -30,14 +30,14 @@ type Parse<R extends string> =
 /** start group parsing */
 type ParseGroup<R extends string> =
     R extends `?${infer R extends string}` ?
-        R extends `:${infer R extends string}` ? ParseGroup_<R> extends { g: infer G extends GroupsArray, ng: infer NG extends NamedGroups, r: infer R extends string } ? { g: [...G], ng: NG, r: R } : undefined :
-        R extends `=${infer R extends string}` ? ParseGroup_<R> extends { g: infer G extends GroupsArray, ng: infer NG extends NamedGroups, r: infer R extends string } ? { g: [...G], ng: NG, r: R } : undefined :
-        R extends `!${infer R extends string}` ? ParseGroup_<R> extends { g: infer G extends GroupsArray, ng: infer NG extends NamedGroups, r: infer R extends string } ? { g: [...G], ng: NG, r: R } : undefined :
+        R extends `:${infer R extends string}` ? ParseGroup_<R> :
+        R extends `=${infer R extends string}` ? ParseGroup_<R> :
+        R extends `!${infer R extends string}` ? ParseGroup_<R> :
         R extends `<${infer R extends string}` ?
-            R extends `=${infer R extends string}` ? ParseGroup_<R> extends { g: infer G extends GroupsArray, ng: infer NG extends NamedGroups, r: infer R extends string } ? { g: [...G], ng: NG, r: R } : undefined :
-            R extends `!${infer R extends string}` ? ParseGroup_<R> extends { g: infer G extends GroupsArray, ng: infer NG extends NamedGroups, r: infer R extends string } ? { g: [...G], ng: NG, r: R } : undefined :
-            ParseGroupName<R> extends { g: infer G extends GroupsArray, ng: infer NG extends NamedGroups, r: infer R extends string } ?
-                ParseGroup_<R> extends { g: infer G2 extends GroupsArray, ng: infer NG2 extends NamedGroups, r: infer R extends string } ? { g: [...G,...G2], ng: NG & NG2, r: R } : undefined :
+            R extends `=${infer R extends string}` ? ParseGroup_<R> :
+            R extends `!${infer R extends string}` ? ParseGroup_<R> :
+            ParseGroupName<R> extends { ng: infer NG extends NamedGroups, r: infer R extends string } ?
+                ParseGroup_<R> extends { g: infer G2 extends GroupsArray, ng: infer NG2 extends NamedGroups, r: infer R extends string } ? { g: G2, ng: NG & NG2, r: R } : undefined :
             undefined :
         undefined :
     ParseGroup_<R> extends { g: infer G extends GroupsArray, ng: infer NG extends NamedGroups, r: infer R extends string } ? { g: [string,...G], ng: NG, r: R } :
@@ -48,7 +48,7 @@ type ParseGroupName<R extends string> =
     undefined;
 
 type ParseGroupName_<R extends string, Name extends string> =
-    R extends `>${infer R extends string}` ? { g: [], ng: {[ng in Name]:string}, r: R } :
+    R extends `>${infer R extends string}` ? { ng: {[ng in Name]:string}, r: R } :
     R extends `${infer N extends Letters|Digits|"_"}${infer R extends string}` ? ParseGroupName_<R,`${Name}${N}`> :
     undefined;
 
