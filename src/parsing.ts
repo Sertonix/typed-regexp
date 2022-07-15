@@ -8,12 +8,9 @@ type LettersLowerCase = "a"|"b"|"c"|"d"|"e"|"f"|"g"|"h"|"i"|"j"|"k"|"l"|"m"|"n"|
 type HexDigits = Digits|"a"|"b"|"c"|"d"|"e"|"f"|"A"|"B"|"C"|"D"|"E"|"F";
 type Digits = "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9";
 
-// IDEA use { [k in string]: k } to support union types
-// important: groups are undefined when not used in match
 // important: this doesn't support non ascii characters
 // IDEA support string parts with:
 //  R extends `${infer C extends string}${infer R extends string}` ? string extends C ? {g:GroupsArray,n:NamedGroups,r:R} : undefined : undefined
-// IDEA use return value to pass usefull error information
 // TODO throw error on duplicated group name
 
 type GroupsArray = Array<string|undefined>;
