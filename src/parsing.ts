@@ -21,9 +21,9 @@ type NamedGroups = {[k:string]:string|undefined};
 
 /** normal parsing */
 type Parse<R extends string> =
-    R extends "" ? { g: [], ng: {}, r: R } :
+    R extends "" ? { g: [], ng: {} } :
     ParsePart<R> extends { g: infer G extends GroupsArray, ng: infer NG extends NamedGroups, r: infer R extends string } ?
-        Parse<R> extends { g: infer G2 extends GroupsArray, ng: infer NG2 extends NamedGroups, r: infer R extends string } ? { g: [...G,...G2], ng: NG & NG2, r: R } :
+        Parse<R> extends { g: infer G2 extends GroupsArray, ng: infer NG2 extends NamedGroups } ? { g: [...G,...G2], ng: NG & NG2 } :
         undefined :
     undefined;
 
