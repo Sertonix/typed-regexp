@@ -21,7 +21,7 @@ export type TypedRegExpExecArray<
 export interface TypedRegExp<
     Groups extends GroupsArrayBase = GroupsArrayBase,
     NamedGroups extends NamedGroupsBase = NamedGroupsBase,
-    FlagCombo extends RegExpFlagCombos = RegExpFlagCombos,
+    FlagCombo extends RegExpFlagCombos = "",
 > extends RegExp {
     // IDEA only override if existing in the RegExp interface to support more versions
     exec<InputString extends string, Matches extends boolean = boolean>(string: InputString): If<Matches,TypedRegExpExecArray<Groups,NamedGroups,InputString>,null>;
@@ -39,7 +39,7 @@ export interface TypedRegExp<
     [Symbol.matchAll]<InputString extends string>(str: InputString): IterableIterator<TypedRegExpMatchArray<Groups,NamedGroups,InputString>>;
 }
 
-export type TypedRegExpFromString<Pattern extends string, FlagCombo extends RegExpFlagCombos> = ParseRegExp<Pattern> extends { g: infer G extends GroupsArrayBase|[] , ng: infer NG extends NamedGroupsBase } ? TypedRegExp<G,NG,FlagCombo> : never;
+export type TypedRegExpFromString<Pattern extends string, FlagCombo extends RegExpFlagCombos = ""> = ParseRegExp<Pattern> extends { g: infer G extends GroupsArrayBase|[] , ng: infer NG extends NamedGroupsBase } ? TypedRegExp<G,NG,FlagCombo> : never;
 
 export const TypedRegExp = RegExp as TypedRegExpConstructor;
 
