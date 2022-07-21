@@ -1,6 +1,8 @@
+import type { ParseRegExp, GroupsArrayBase, NamedGroupsBase } from "./parsing";
+
 export type TypedRegExpMatchArray<
-    Groups extends string[] = string[],
-    NamedGroups extends { [key: string]: string } = { [key: string]: string },
+    Groups extends GroupsArrayBase = GroupsArrayBase,
+    NamedGroups extends NamedGroupsBase = NamedGroupsBase,
     InputString extends string = string
 > = {
     index?: number;
@@ -9,19 +11,16 @@ export type TypedRegExpMatchArray<
 } & ( [string,...Groups] & IntersectedArray<string,TypedRegExpMatchArray<Groups,NamedGroups,InputString>> );
 
 export type TypedRegExpExecArray<
-    Groups extends string[] = string[],
-    NamedGroups extends { [key: string]: string } = { [key: string]: string },
+    Groups extends GroupsArrayBase = GroupsArrayBase,
+    NamedGroups extends NamedGroupsBase = NamedGroupsBase,
     InputString extends string = string
 > = TypedRegExpMatchArray<Groups,NamedGroups,InputString> & {
     index: number;
     input: InputString;
 };
-
-// IDEA regexp parsing -> automatic Groups and NamedGroups generation
-
 export interface TypedRegExp<
-    Groups extends string[] = string[],
-    NamedGroups extends { [key: string]: string } = { [key: string]: string },
+    Groups extends GroupsArrayBase = GroupsArrayBase,
+    NamedGroups extends NamedGroupsBase = NamedGroupsBase,
     FlagCombo extends RegExpFlagCombos = RegExpFlagCombos,
 > extends RegExp {
     // IDEA only override if existing in the RegExp interface to support more versions
@@ -40,19 +39,22 @@ export interface TypedRegExp<
     [Symbol.matchAll]<InputString extends string>(str: InputString): IterableIterator<TypedRegExpMatchArray<Groups,NamedGroups,InputString>>;
 }
 
+export type TypedRegExpFromString<Pattern extends string, FlagCombo extends RegExpFlagCombos> = ParseRegExp<Pattern> extends { g: infer G extends GroupsArrayBase|[] , ng: infer NG extends NamedGroupsBase } ? TypedRegExp<G,NG,FlagCombo> : never;
+
 export const TypedRegExp = RegExp as TypedRegExpConstructor;
 
 type RegExpConstructor = typeof RegExp;
 interface TypedRegExpConstructor extends RegExpConstructor {
-    new <Groups extends string[], NamedGroups extends { [key: string]: string }>(): TypedRegExp<[],{},"">;
-    new <Groups extends string[], NamedGroups extends { [key: string]: string }>(pattern: string): TypedRegExp<Groups,NamedGroups,"">;
-    new <Groups extends string[], NamedGroups extends { [key: string]: string }, FlagCombo extends RegExpFlagCombos>(pattern: string, flags: FlagCombo): TypedRegExp<Groups,NamedGroups,FlagCombo>;
-    new <Groups extends string[], NamedGroups extends { [key: string]: string }, FlagCombo extends RegExpFlagCombos>(pattern: TypedRegExp<Groups,NamedGroups,FlagCombo>): TypedRegExp<Groups,NamedGroups,FlagCombo>;
-    new <Groups extends string[], NamedGroups extends { [key: string]: string }, FlagCombo extends RegExpFlagCombos>(pattern: TypedRegExp<Groups,NamedGroups>, flags: FlagCombo): TypedRegExp<Groups,NamedGroups,FlagCombo>;
-    <Groups extends string[], NamedGroups extends { [key: string]: string }>(pattern: string): TypedRegExp<Groups,NamedGroups,"">;
-    <Groups extends string[], NamedGroups extends { [key: string]: string }, FlagCombo extends RegExpFlagCombos>(pattern: string, flags: FlagCombo): TypedRegExp<Groups,NamedGroups,FlagCombo>;
-    <Groups extends string[], NamedGroups extends { [key: string]: string }, FlagCombo extends RegExpFlagCombos>(pattern: TypedRegExp<Groups,NamedGroups,FlagCombo>): TypedRegExp<Groups,NamedGroups,FlagCombo>;
-    <Groups extends string[], NamedGroups extends { [key: string]: string }, FlagCombo extends RegExpFlagCombos>(pattern: TypedRegExp<Groups,NamedGroups>, flags: FlagCombo): TypedRegExp<Groups,NamedGroups,FlagCombo>;
+    new <Groups extends GroupsArrayBase, NamedGroups extends NamedGroupsBase>(): TypedRegExp<[],{},"">;
+    new <Pattern extends string, FlagCombo extends RegExpFlagCombos>(pattern: Pattern, flags: FlagCombo = ""): ParseRegExp<Pattern> extends { g: infer G extends GroupsArrayBase , ng: infer NG extends NamedGroupsBase } ? TypedRegExp<G,NG,""> : never;
+    new <Groups extends GroupsArrayBase, NamedGroups extends NamedGroupsBase, FlagCombo extends RegExpFlagCombos>(pattern: string, flags: FlagCombo = ""): TypedRegExp<Groups,NamedGroups,FlagCombo>;
+    new <Groups extends GroupsArrayBase, NamedGroups extends NamedGroupsBase, FlagCombo extends RegExpFlagCombos>(pattern: TypedRegExp<Groups,NamedGroups,FlagCombo>): TypedRegExp<Groups,NamedGroups,FlagCombo>;
+    new <Groups extends GroupsArrayBase, NamedGroups extends NamedGroupsBase, FlagCombo extends RegExpFlagCombos>(pattern: TypedRegExp<Groups,NamedGroups>, flags: FlagCombo): TypedRegExp<Groups,NamedGroups,FlagCombo>;
+    <Groups extends GroupsArrayBase, NamedGroups extends NamedGroupsBase>(): TypedRegExp<[],{},"">;
+    <Pattern extends string, FlagCombo extends RegExpFlagCombos>(pattern: Pattern, flags: FlagCombo = ""): ParseRegExp<Pattern> extends { g: infer G extends GroupsArrayBase , ng: infer NG extends NamedGroupsBase } ? TypedRegExp<G,NG,""> : never;
+    <Groups extends GroupsArrayBase, NamedGroups extends NamedGroupsBase, FlagCombo extends RegExpFlagCombos>(pattern: string, flags: FlagCombo = ""): TypedRegExp<Groups,NamedGroups,FlagCombo>;
+    <Groups extends GroupsArrayBase, NamedGroups extends NamedGroupsBase, FlagCombo extends RegExpFlagCombos>(pattern: TypedRegExp<Groups,NamedGroups,FlagCombo>): TypedRegExp<Groups,NamedGroups,FlagCombo>;
+    <Groups extends GroupsArrayBase, NamedGroups extends NamedGroupsBase, FlagCombo extends RegExpFlagCombos>(pattern: TypedRegExp<Groups,NamedGroups>, flags: FlagCombo): TypedRegExp<Groups,NamedGroups,FlagCombo>;
     readonly prototype: TypedRegExp;
     readonly [Symbol.species]: TypedRegExpConstructor;
 }
@@ -61,19 +63,19 @@ interface TypedRegExpConstructor extends RegExpConstructor {
 export interface TypedRegExpString extends Omit<String,"match"|"matchAll"|"replace"|"replaceAll"> /* excludes the old properties to prevent overloads */ {
     // IDEA use return value from the Regexp[Symbol.match] etc. definitions
     // IDEA pass this as string to matches
-    match<Groups extends string[], NamedGroups extends { [key: string]: string }, FlagCombo extends RegExpFlagCombos = RegExpFlagCombos, Matches extends boolean = boolean>(regexp: string | TypedRegExp<Groups,NamedGroups,FlagCombo>): If<Matches,TypedRegExpMatchArray<Groups,NamedGroups>,null>;
-    matchAll<Groups extends string[], NamedGroups extends { [key: string]: string }, FlagCombo extends RegExpFlagCombos<{g:true}> = RegExpFlagCombos<{g:true}>>(regexp: TypedRegExp<Groups,NamedGroups,FlagCombo>): IterableIterator<TypedRegExpMatchArray<Groups,NamedGroups>>;
-    replace<Groups extends string[], NamedGroups extends { [key: string]: string }, FlagCombo extends RegExpFlagCombos = RegExpFlagCombos>(searchValue: string | TypedRegExp<Groups,NamedGroups,FlagCombo>, replacer: (substring: string, ...args: [...Groups,number,string,...(keyof NamedGroups extends never ? [] : [NamedGroups])]) => string): string;
-    replaceAll<Groups extends string[], NamedGroups extends { [key: string]: string }, FlagCombo extends RegExpFlagCombos<{g:true}> = RegExpFlagCombos<{g:true}>>(searchValue: string | TypedRegExp<Groups,NamedGroups,FlagCombo>, replacer: (substring: string, ...args: [...Groups,number,string,...(keyof NamedGroups extends never ? [] : [NamedGroups])]) => string): string;
+    match<Groups extends GroupsArrayBase, NamedGroups extends NamedGroupsBase, FlagCombo extends RegExpFlagCombos = RegExpFlagCombos, Matches extends boolean = boolean>(regexp: string | TypedRegExp<Groups,NamedGroups,FlagCombo>): If<Matches,TypedRegExpMatchArray<Groups,NamedGroups>,null>;
+    matchAll<Groups extends GroupsArrayBase, NamedGroups extends NamedGroupsBase, FlagCombo extends RegExpFlagCombos<{g:true}> = RegExpFlagCombos<{g:true}>>(regexp: TypedRegExp<Groups,NamedGroups,FlagCombo>): IterableIterator<TypedRegExpMatchArray<Groups,NamedGroups>>;
+    replace<Groups extends GroupsArrayBase, NamedGroups extends NamedGroupsBase, FlagCombo extends RegExpFlagCombos = RegExpFlagCombos>(searchValue: string | TypedRegExp<Groups,NamedGroups,FlagCombo>, replacer: (substring: string, ...args: [...Groups,number,string,...(keyof NamedGroups extends never ? [] : [NamedGroups])]) => string): string;
+    replaceAll<Groups extends GroupsArrayBase, NamedGroups extends NamedGroupsBase, FlagCombo extends RegExpFlagCombos<{g:true}> = RegExpFlagCombos<{g:true}>>(searchValue: string | TypedRegExp<Groups,NamedGroups,FlagCombo>, replacer: (substring: string, ...args: [...Groups,number,string,...(keyof NamedGroups extends never ? [] : [NamedGroups])]) => string): string;
 }
 
 declare global {
     interface String {
         // IDEA add a toggle to apply the modifications to the String class directly
-        match<Groups extends string[], NamedGroups extends { [key: string]: string }, FlagCombo extends RegExpFlagCombos = RegExpFlagCombos, Matches extends boolean = boolean>(regexp: string | TypedRegExp<Groups,NamedGroups,FlagCombo>): If<Matches,TypedRegExpMatchArray<Groups,NamedGroups>,null>;
-        matchAll<Groups extends string[], NamedGroups extends { [key: string]: string }, FlagCombo extends RegExpFlagCombos<{g:true}> = RegExpFlagCombos<{g:true}>>(regexp: TypedRegExp<Groups,NamedGroups,FlagCombo>): IterableIterator<TypedRegExpMatchArray<Groups,NamedGroups>>;
-        replace<Groups extends string[], NamedGroups extends { [key: string]: string }, FlagCombo extends RegExpFlagCombos = RegExpFlagCombos>(searchValue: string | TypedRegExp<Groups,NamedGroups,FlagCombo>, replacer: (substring: string, ...args: [...Groups,number,string,...(keyof NamedGroups extends never ? [] : [NamedGroups])]) => string): string;
-        replaceAll<Groups extends string[], NamedGroups extends { [key: string]: string }, FlagCombo extends RegExpFlagCombos<{g:true}> = RegExpFlagCombos<{g:true}>>(searchValue: string | TypedRegExp<Groups,NamedGroups,FlagCombo>, replacer: (substring: string, ...args: [...Groups,number,string,...(keyof NamedGroups extends never ? [] : [NamedGroups])]) => string): string;
+        match<Groups extends GroupsArrayBase, NamedGroups extends NamedGroupsBase, FlagCombo extends RegExpFlagCombos = RegExpFlagCombos, Matches extends boolean = boolean>(regexp: string | TypedRegExp<Groups,NamedGroups,FlagCombo>): If<Matches,TypedRegExpMatchArray<Groups,NamedGroups>,null>;
+        matchAll<Groups extends GroupsArrayBase, NamedGroups extends NamedGroupsBase, FlagCombo extends RegExpFlagCombos<{g:true}> = RegExpFlagCombos<{g:true}>>(regexp: TypedRegExp<Groups,NamedGroups,FlagCombo>): IterableIterator<TypedRegExpMatchArray<Groups,NamedGroups>>;
+        replace<Groups extends GroupsArrayBase, NamedGroups extends NamedGroupsBase, FlagCombo extends RegExpFlagCombos = RegExpFlagCombos>(searchValue: string | TypedRegExp<Groups,NamedGroups,FlagCombo>, replacer: (substring: string, ...args: [...Groups,number,string,...(keyof NamedGroups extends never ? [] : [NamedGroups])]) => string): string;
+        replaceAll<Groups extends GroupsArrayBase, NamedGroups extends NamedGroupsBase, FlagCombo extends RegExpFlagCombos<{g:true}> = RegExpFlagCombos<{g:true}>>(searchValue: string | TypedRegExp<Groups,NamedGroups,FlagCombo>, replacer: (substring: string, ...args: [...Groups,number,string,...(keyof NamedGroups extends never ? [] : [NamedGroups])]) => string): string;
     }
 }
 
