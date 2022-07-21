@@ -124,4 +124,4 @@ type FlagCombosGenerator<F extends {[k:string]: boolean}> = ValueOf<{[f in Strin
 
 /** sorts the flag alphabetically */
 export type SortRegExpFlags<FlagCombo extends RegExpFlagCombos> = `${IfIn<FlagCombo,"d","d","">}${IfIn<FlagCombo,"g","g","">}${IfIn<FlagCombo,"i","i","">}${IfIn<FlagCombo,"m","m","">}${IfIn<FlagCombo,"u","u","">}${IfIn<FlagCombo,"y","y","">}`;
-// IDEA generall sort based on alphabet
+// IDEA general sort based on alphabet
